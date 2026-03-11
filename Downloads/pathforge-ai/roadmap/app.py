@@ -429,7 +429,7 @@ elif page == "🎤Interview":
 
     role = st.text_input("Target Role")
 
-    if st.button("Generate Question"):
+    if st.button("Generate Questions"):
         st.session_state.interview_question = generate_interview_question(role)
 
     if "interview_questions" in st.session_state:
@@ -443,7 +443,7 @@ elif page == "🎤Interview":
 
             result = evaluate_interview_answer(
             role,
-            st.session_state.interview_question,
+            st.session_state.interview_questions,
             answer
             )
 
