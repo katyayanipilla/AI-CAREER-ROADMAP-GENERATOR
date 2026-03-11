@@ -430,11 +430,13 @@ elif page == "🎤Interview":
     role = st.text_input("Target Role")
 
     if st.button("Generate Questions"):
-        st.session_state.interview_question = generate_interview_question(role)
+
+        st.session_state.interview_questions = generate_interview_question(role)
 
     if "interview_questions" in st.session_state:
 
         for q in st.session_state.interview_questions:
+
             st.write("🎤", q["question"])
 
         answer = st.text_area("Your Answer")
@@ -442,9 +444,9 @@ elif page == "🎤Interview":
         if st.button("Evaluate"):
 
             result = evaluate_interview_answer(
-            role,
-            st.session_state.interview_questions,
-            answer
+                role,
+                st.session_state.interview_questions[0]["question"],
+                answer
             )
 
             if result:
@@ -454,11 +456,11 @@ elif page == "🎤Interview":
                 conf = result.get("confidence_score", 0)
 
                 save_interview_result(
-                st.session_state.username,
-                role,
-                tech,
-                comm,
-                conf
+                    st.session_state.username,
+                    role,
+                    tech,
+                    comm,
+                    conf
                 )
 
                 st.subheader("Evaluation")
@@ -470,11 +472,6 @@ elif page == "🎤Interview":
                 st.write("Feedback:", result.get("feedback",""))
                 st.write("Ideal Answer:", result.get("ideal_answer",""))
                 st.write("Suggestions:", result.get("improvement_suggestions",""))
-
-            else:
-
-                st.error("AI could not evaluate the answer. Try again.")
-
 
 # =====================================================
 # MENTOR CHAT
