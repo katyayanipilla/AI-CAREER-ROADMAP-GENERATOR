@@ -432,9 +432,10 @@ elif page == "🎤Interview":
     if st.button("Generate Question"):
         st.session_state.interview_question = generate_interview_question(role)
 
-    if st.session_state.interview_question:
+    if "interview_questions" in st.session_state:
 
-        st.write(st.session_state.interview_question)
+        for q in st.session_state.interview_questions:
+            st.write("🎤", q["question"])
 
         answer = st.text_area("Your Answer")
 

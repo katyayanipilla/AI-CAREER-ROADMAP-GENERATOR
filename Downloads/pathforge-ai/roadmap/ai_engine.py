@@ -179,11 +179,22 @@ def generate_interview_question(role, round_type="technical"):
 Role: {role}
 Round: {round_type}
 
-Ask ONE strong interview question.
+Generate 5 strong interview questions.
+
+Return JSON list like:
+
+[
+{{"question":"question1"}},
+{{"question":"question2"}},
+{{"question":"question3"}},
+{{"question":"question4"}},
+{{"question":"question5"}}
+]
 """
 
-    return ask_ai(system_prompt, user_prompt)
+    response = ask_ai(system_prompt, user_prompt)
 
+    return safe_json_parse(response) or []
 
 # =====================================================
 # INTERVIEW EVALUATION
