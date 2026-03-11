@@ -58,7 +58,7 @@ def safe_json_parse(text):
 # AI CALL ENGINE
 # =====================================================
 
-def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=4000):
+def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=8000):
 
     response = client.chat.completions.create(
 
@@ -90,19 +90,37 @@ Return ONLY valid JSON.
 """
 
     user_prompt = f"""
-Create a {weeks}-week roadmap to become a {role}
+Create a structured career roadmap.
 
+Role: {role}
 User Level: {level}
+Duration: {duration_months} months
+Total Weeks: {weeks}
+
+Generate EXACTLY {weeks} weeks.
 
 Each week must include:
 - week_number
 - title
-- concepts
-- learning_resources
+- concepts (list)
+- learning_resources (list with title and url)
 - project
 - outcome
 
-Return JSON list
+Return ONLY JSON array.
+
+Example format:
+
+[
+{{
+"week_number":1,
+"title":"Introduction",
+"concepts":["concept1","concept2"],
+"learning_resources":[{{"title":"resource","url":"link"}}],
+"project":"mini project",
+"outcome":"learning outcome"
+}}
+]
 """
 
     response = ask_ai(system_prompt, user_prompt)
@@ -173,31 +191,35 @@ Ask ONE strong interview question.
 
 def evaluate_interview_answer(role, question, answer):
 
-    system_prompt = "You are evaluating a job candidate. Return JSON."
+    system_prompt = """
+You are a FAANG interview evaluator.
+
+Return ONLY valid JSON.
+No explanations outside JSON.
+"""
 
     user_prompt = f"""
 Role: {role}
 
 Question: {question}
 
-Answer: {answer}
+Candidate Answer: {answer}
 
-Return JSON:
+Return JSON in this exact format:
 
 {{
-"technical_score":0,
-"communication_score":0,
-"confidence_score":0,
-"feedback":"",
-"ideal_answer":"",
-"improvement_suggestions":""
+"technical_score": 0-100,
+"communication_score": 0-100,
+"confidence_score": 0-100,
+"feedback": "short feedback",
+"ideal_answer": "best possible answer",
+"improvement_suggestions": "how candidate can improve"
 }}
 """
 
     response = ask_ai(system_prompt, user_prompt)
 
-    return safe_json_parse(response) or {}
-
+    return safe_json_parse(response)
 
 # =====================================================
 # SKILL GAP ANALYSIS

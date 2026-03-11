@@ -297,7 +297,7 @@ elif page == "📚Roadmap":
     st.title("AI Career Roadmap")
 
     role = st.text_input("Target Role")
-    duration = st.selectbox("Duration (Months)", [3,6,9])
+    duration = st.selectbox("Duration (Months)", [3,6,9,])
     level = st.selectbox("Your Level", ["Beginner","Intermediate","Advanced"])
     
     roadmap_text = ""
