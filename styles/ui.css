@@ -1,0 +1,264 @@
+/* APP BACKGROUND */
+
+.stApp{
+background:linear-gradient(135deg,#0f172a,#020617);
+color:white;
+}
+
+h1{
+color:white !important;
+font-weight:900 !important;
+}
+
+/* HEADERS */
+
+.center-title{
+text-align:center;
+font-size:42px;
+font-weight:900;
+color:white !important;
+margin-bottom:20px;
+background:none !important;
+-webkit-text-fill-color:white !important;
+}
+
+
+/* SIDEBAR */
+
+[data-testid="stSidebar"]{
+background:#020617;
+}
+
+
+/* ========================= */
+/* BUTTON GLOW EFFECT */
+/* ========================= */
+
+.stButton > button {
+    background: linear-gradient(90deg,#2563eb,#38bdf8);
+    border: none;
+    border-radius: 12px;
+    height: 45px;
+    font-weight: bold;
+    color: white;
+    transition: all 0.3s ease;
+
+    /* 🔵 Default glow */
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.6);
+}
+
+/* Hover glow */
+.stButton > button:hover {
+    transform: scale(1.05);
+    background: linear-gradient(90deg,#1d4ed8,#0ea5e9);
+
+    /* Strong glow */
+    box-shadow: 0 0 20px rgba(56, 189, 248, 0.9),
+                0 0 40px rgba(37, 99, 235, 0.6);
+}
+
+/* Click effect */
+.stButton > button:active {
+    transform: scale(0.97);
+    box-shadow: 0 0 10px rgba(56, 189, 248, 0.5);
+}
+
+/* INPUTS */
+
+input,textarea{
+background:#1e293b!important;
+color:white!important;
+border-radius:10px!important;
+}
+
+
+/* CARDS */
+
+.card{
+background:#1e293b;
+padding:20px;
+border-radius:16px;
+box-shadow:0px 8px 20px rgba(0,0,0,0.4);
+margin-bottom:20px;
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.02);
+}
+
+
+/* SCROLLBAR */
+
+::-webkit-scrollbar{
+width:6px;
+}
+
+::-webkit-scrollbar-thumb{
+background:#38bdf8;
+border-radius:10px;
+}
+
+/* SIDEBAR BACKGROUND */
+section[data-testid="stSidebar"] {
+    background: linear-gradient(180deg,#0f172a,#1e293b);
+}
+
+/* SIDEBAR TEXT */
+section[data-testid="stSidebar"] * {
+    color: white !important;
+}
+
+/* SIDEBAR RADIO BUTTONS */
+.stRadio > div {
+    background-color: #1e293b;
+    padding: 10px;
+    border-radius: 10px;
+}
+
+/* HIGHLIGHT SELECTED PAGE */
+.stRadio label:hover {
+    background-color: #2563eb;
+    border-radius: 8px;
+    padding: 6px;
+}
+
+/* APP BACKGROUND */
+body {
+    background: linear-gradient(120deg,#0f172a,#1e3a8a);
+}
+
+/* MAIN CONTAINER */
+.main {
+    background-color: transparent;
+}
+
+.center-title {
+    text-align:center;
+    font-size:40px;
+    font-weight:700;
+    background:linear-gradient(90deg,#2563eb,#06b6d4);
+    -webkit-background-clip:text;
+    -webkit-text-fill-color:transparent;
+}
+
+.profile-card{
+background:#111827;
+color:white;
+padding:30px;
+border-radius:15px;
+box-shadow:0px 6px 20px rgba(0,0,0,0.3);
+}
+
+.stat-card{
+background:#1f2937;
+padding:20px;
+border-radius:12px;
+text-align:center;
+color:white;
+}
+
+/* DASHBOARD CARDS */
+
+.dashboard-card{
+background:#111827;
+border-radius:16px;
+padding:25px;
+box-shadow:0px 6px 20px rgba(0,0,0,0.4);
+text-align:center;
+border:1px solid #1f2937;
+transition:0.3s;
+}
+
+.dashboard-card:hover{
+transform:scale(1.03);
+border:1px solid #38bdf8;
+}
+
+/* DASHBOARD HEADINGS */
+
+.dashboard-title{
+font-size:20px;
+font-weight:700;
+margin-bottom:10px;
+}
+
+/* SCORE STYLE */
+
+.score-highlight{
+font-size:32px;
+font-weight:900;
+color:#38bdf8;
+}
+
+/* CAREER SCORE BOX */
+
+.main-score-box{
+background:#020617;
+padding:25px;
+border-radius:18px;
+border:1px solid #38bdf8;
+text-align:center;
+margin-bottom:30px;
+}
+
+.card{
+background:#0f172a;
+border-radius:18px;
+padding:25px;
+margin-bottom:25px;
+border:1px solid #1e293b;
+box-shadow:0px 8px 25px rgba(0,0,0,0.4);
+}
+
+.card h2{
+color:#38bdf8;
+margin-bottom:10px;
+}
+
+.card h4{
+color:#22c55e;
+margin-top:10px;
+}
+
+.card ul{
+padding-left:20px;
+}
+
+.card li{
+margin-bottom:6px;
+}
+
+/* ========================= */
+/* STREAK UI ENHANCEMENT */
+/* ========================= */
+
+/* Streak Cards Highlight */
+.dashboard-card.streak-current {
+    border: 1px solid #f97316; /* orange */
+    box-shadow: 0px 0px 15px rgba(249, 115, 22, 0.4);
+}
+
+.dashboard-card.streak-max {
+    border: 1px solid #eab308; /* gold */
+    box-shadow: 0px 0px 15px rgba(234, 179, 8, 0.4);
+}
+
+/* Optional glow animation */
+@keyframes glowPulse {
+    0% { box-shadow: 0 0 5px rgba(56,189,248,0.3); }
+    50% { box-shadow: 0 0 20px rgba(56,189,248,0.8); }
+    100% { box-shadow: 0 0 5px rgba(56,189,248,0.3); }
+}
+
+/* Apply glow to active streak */
+.dashboard-card.streak-current:hover {
+    animation: glowPulse 1.5s infinite;
+}
+
+/* Small motivational text */
+.streak-text {
+    margin-top: 8px;
+    font-size: 14px;
+    color: #94a3b8;
+}
