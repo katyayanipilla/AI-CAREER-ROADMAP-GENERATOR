@@ -367,7 +367,6 @@ from groq import Groq
 # ENV SETUP
 # =====================================================
 
-load_dotenv("/etc/secrets/.env")
 
 api_key = os.getenv("GROQ_API_KEY")
 
