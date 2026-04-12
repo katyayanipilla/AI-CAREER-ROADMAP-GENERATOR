@@ -58,7 +58,7 @@ def safe_json_parse(text):
 # AI CALL ENGINE
 # =====================================================
 
-def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=8000):
+def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=6000):
 
     response = client.chat.completions.create(
 
