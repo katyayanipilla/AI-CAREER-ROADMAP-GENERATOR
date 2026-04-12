@@ -87,33 +87,36 @@ def generate_roadmap(role, duration_months, level):
 
     system_prompt = """
 You are a professional AI curriculum designer.
-Return ONLY valid JSON.
-Do not truncate.
-Ensure full response is complete.
+Return ONLY valid JSON array. No explanation, no markdown, no extra text.
+The response must be a complete, valid JSON array from [ to ].
 """
 
-    user_prompt = f""" 
+    user_prompt = f"""
 Role: {role}
 Level: {level}
-Weeks: {weeks}
+Duration: {weeks} weeks
 
-Generate {weeks} weeks roadmap.
+Generate a {weeks}-week learning roadmap.
 
-Return JSON array only.
+Return a JSON array with exactly {weeks} objects.
 
-Each item:
-{{
-"week_number": int,
-"title": "",
-"concepts": [],
-"learning_resources": [{{"title":"","url":""}}],
-"project": "",
-"outcome": ""
-}}
+Format:
+[
+  {{
+    "week_number": 1,
+    "title": "Week title",
+    "concepts": ["concept1", "concept2"],
+    "learning_resources": [{{"title": "Resource name", "url": "https://..."}}],
+    "project": "Hands-on project description",
+    "outcome": "What the learner will achieve"
+  }}
 ]
+
+Return ONLY the JSON array. No extra text.
 """
 
-    max_tokens = min(weeks * 120, 2000)
+    # ~300 tokens per week keeps the response complete
+    max_tokens = min(weeks * 300, 8000)
 
     response = ask_ai(system_prompt, user_prompt, max_tokens=max_tokens)
 

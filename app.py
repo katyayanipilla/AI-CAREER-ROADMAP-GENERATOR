@@ -348,87 +348,91 @@ elif page == "📚Roadmap":
     role = st.text_input("Target Role")
     duration = st.selectbox("Duration (Months)", [3,6,9,])
     level = st.selectbox("Your Level", ["Beginner","Intermediate","Advanced"])
-    
+
     roadmap_text = ""
-    
+
     if st.button("Generate Roadmap"):
 
         with st.spinner("Generating roadmap..."):
-            roadmap = generate_roadmap(role,duration,level)
+            roadmap = generate_roadmap(role, duration, level)
 
-        
+        if not roadmap:
+            st.error("Roadmap generation failed. Check terminal for raw AI response.")
 
-        for week in roadmap:
+        else:
+            for week in roadmap:
 
-            concepts = "".join([f"<li>{c}</li>" for c in week["concepts"]])
+                concepts = "".join([f"<li>{c}</li>" for c in week["concepts"]])
 
-            resources = ""
-            for r in week["learning_resources"]:
-                if "url" in r:
-                    resources += f"<li>📚 <b>{r['title']}</b> — <a href='{r['url']}' target='_blank'>Open</a></li>"
-                else:
-                    resources += f"<li>📚 <b>{r['title']}</b></li>"
+                resources = ""
+                for r in week["learning_resources"]:
+                    if "url" in r:
+                        resources += f"<li>📚 <b>{r['title']}</b> — <a href='{r['url']}' target='_blank'>Open</a></li>"
+                    else:
+                        resources += f"<li>📚 <b>{r['title']}</b></li>"
 
-            st.markdown(f"""
-            <div class="card">
+                st.markdown(f"""
+                <div class="card">
 
-            <h2>📅 Week {week['week_number']} — {week['title']}</h2>
+                <h2>📅 Week {week['week_number']} — {week['title']}</h2>
 
-            <h4>🧠 Concepts</h4>
-            <ul>{concepts}</ul>
+                <h4>🧠 Concepts</h4>
+                <ul>{concepts}</ul>
 
-            <h4>📖 Learning Resources</h4>
-            <ul>{resources}</ul>
+                <h4>📖 Learning Resources</h4>
+                <ul>{resources}</ul>
 
-            <h4>💻 Project</h4>
-            <p>{week["project"]}</p>
+                <h4>💻 Project</h4>
+                <p>{week["project"]}</p>
 
-            <h4>🎯 Outcome</h4>
-            <p>{week["outcome"]}</p>
+                <h4>🎯 Outcome</h4>
+                <p>{week["outcome"]}</p>
 
-            </div>
-            """, unsafe_allow_html=True)
+                </div>
+                """, unsafe_allow_html=True)
 
-            roadmap_text += f"""
-        Week {week['week_number']} — {week['title']}
+                roadmap_text += f"""
+            Week {week['week_number']} — {week['title']}
 
-        Concepts:
-        {', '.join(week['concepts'])}
+            Concepts:
+            {', '.join(week['concepts'])}
 
-        Project:
-        {week['project']}
+            Project:
+            {week['project']}
 
-        Outcome:
-        {week['outcome']}
+            Outcome:
+            {week['outcome']}
 
-    ------------------------------------
-    """
-    def generate_pdf(text):
+        ------------------------------------
+        """
 
-        text = text.replace("—", "-")  # replace long dash
-        text = text.replace("📚", "")
-        text = text.replace("🧠", "")
-        text = text.replace("🎯", "")
-        text = text.replace("💻", "")
+            def generate_pdf(text):
 
-        pdf = FPDF()
-        pdf.add_page()
-        pdf.set_font("Arial", size=12)
+                text = text.replace("—", "-")
+                text = text.replace("📚", "")
+                text = text.replace("🧠", "")
+                text = text.replace("🎯", "")
+                text = text.replace("💻", "")
 
-        for line in text.split("\n"):
-            pdf.cell(0, 8, txt=line, ln=True)
+                pdf = FPDF()
+                pdf.add_page()
+                pdf.set_font("Arial", size=12)
 
-        pdf.output("roadmap.pdf")
+                for line in text.split("\n"):
+                    pdf.cell(0, 8, txt=line, ln=True)
 
-        with open("roadmap.pdf","rb") as f:
-            return f.read()
-    pdf_data = generate_pdf(roadmap_text)
+                pdf.output("roadmap.pdf")
 
-    st.download_button(
-        "📄 Download Roadmap PDF",
-        pdf_data,
-        file_name="career_roadmap.pdf"
-    )
+                with open("roadmap.pdf","rb") as f:
+                    return f.read()
+
+            pdf_data = generate_pdf(roadmap_text)
+
+            st.download_button(
+                "📄 Download Roadmap PDF",
+                pdf_data,
+                file_name="career_roadmap.pdf"
+            )
 
 # =====================================================
 # DAILY QUIZ
