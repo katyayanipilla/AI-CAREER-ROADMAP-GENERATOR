@@ -92,7 +92,7 @@ section[data-testid="stSidebar"] {
 # LOAD CSS
 # =====================================================
 def load_css():
-    with open("styles/ui.css") as f:
+    with open("ui.css") as f:
         st.markdown(f"<style>{f.read()}</style>", unsafe_allow_html=True)
 
 # ✅ CALL FUNCTION OUTSIDE

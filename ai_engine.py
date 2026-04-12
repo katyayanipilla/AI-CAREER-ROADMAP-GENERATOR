@@ -58,22 +58,23 @@ def safe_json_parse(text):
 # AI CALL ENGINE
 # =====================================================
 
-def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=6000):
+def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=800):
+    try:
+        response = client.chat.completions.create(
+            model=MODEL,
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": user_prompt}
+            ],
+            temperature=temperature,
+            max_tokens=max_tokens
+        )
 
-    response = client.chat.completions.create(
+        return response.choices[0].message.content.strip()
 
-        model=MODEL,
-
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-
-        temperature=temperature,
-        max_tokens=max_tokens
-    )
-
-    return response.choices[0].message.content.strip()
+    except Exception as e:
+        print("🔥 GROQ ERROR:", e)
+        raise e
 
 
 # =====================================================
@@ -87,46 +88,38 @@ def generate_roadmap(role, duration_months, level):
     system_prompt = """
 You are a professional AI curriculum designer.
 Return ONLY valid JSON.
+Do not truncate.
+Ensure full response is complete.
 """
 
-    user_prompt = f"""
-Create a structured career roadmap.
-
+    user_prompt = f""" 
 Role: {role}
-User Level: {level}
-Duration: {duration_months} months
-Total Weeks: {weeks}
+Level: {level}
+Weeks: {weeks}
 
-Generate EXACTLY {weeks} weeks.
+Generate {weeks} weeks roadmap.
 
-Each week must include:
-- week_number
-- title
-- concepts (list)
-- learning_resources (list with title and url)
-- project
-- outcome
+Return JSON array only.
 
-Return ONLY JSON array.
-
-Example format:
-
-[
+Each item:
 {{
-"week_number":1,
-"title":"Introduction",
-"concepts":["concept1","concept2"],
-"learning_resources":[{{"title":"resource","url":"link"}}],
-"project":"mini project",
-"outcome":"learning outcome"
+"week_number": int,
+"title": "",
+"concepts": [],
+"learning_resources": [{{"title":"","url":""}}],
+"project": "",
+"outcome": ""
 }}
 ]
 """
 
-    response = ask_ai(system_prompt, user_prompt)
+    max_tokens = min(weeks * 120, 2000)
 
-    return safe_json_parse(response) or []
+    response = ask_ai(system_prompt, user_prompt, max_tokens=max_tokens)
 
+    parsed = safe_json_parse(response)
+
+    return parsed or []
 
 # =====================================================
 # DAILY QUIZ
