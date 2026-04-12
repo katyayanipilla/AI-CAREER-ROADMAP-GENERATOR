@@ -58,7 +58,7 @@ def safe_json_parse(text):
 # AI CALL ENGINE
 # =====================================================
 
-def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=800):
+def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=4000):
     try:
         response = client.chat.completions.create(
             model=MODEL,
@@ -128,40 +128,41 @@ Return ONLY the JSON array. No extra text.
 # DAILY QUIZ
 # =====================================================
 
-def generate_daily_quiz(topic, difficulty="Beginner", covered_subtopics=None):
+def generate_daily_quiz(topic, difficulty="Beginner", num_questions=10, covered_subtopics=None):
 
     if covered_subtopics is None:
         covered_subtopics = []
 
-    system_prompt = """
-You are a technical exam creator.
-Return ONLY valid JSON.
-"""
+    # 10 questions needs ~2000 tokens, 20 needs ~4000
+    max_tokens = num_questions * 200 + 500
 
-    user_prompt = f"""
-Topic: {topic}
+    system_prompt = """You are a technical exam creator.
+Return ONLY a valid JSON array. No markdown, no explanation, no extra text.
+Start your response with [ and end with ]."""
+
+    user_prompt = f"""Topic: {topic}
 Difficulty: {difficulty}
 
-Avoid these subtopics:
-{covered_subtopics}
+Generate exactly {num_questions} multiple choice questions.
 
-Generate 25 MCQs.
+Return a JSON array like this:
+[
+  {{
+    "question": "What is ...?",
+    "options": ["A) option1", "B) option2", "C) option3", "D) option4"],
+    "correct_answer": "A) option1",
+    "explanation": "Brief explanation",
+    "subtopic": "subtopic name"
+  }}
+]
 
-Each question must include:
+IMPORTANT:
+- Generate exactly {num_questions} questions, no more no less
+- correct_answer must exactly match one of the options strings
+- Return ONLY the JSON array, nothing else"""
 
-- question
-- options
-- correct_answer
-- explanation
-- subtopic
-
-Return JSON list
-"""
-
-    response = ask_ai(system_prompt, user_prompt)
-
+    response = ask_ai(system_prompt, user_prompt, max_tokens=max_tokens)
     return safe_json_parse(response) or []
-
 
 # =====================================================
 # INTERVIEW QUESTION
@@ -234,28 +235,29 @@ Return JSON in this exact format:
 
 def skill_gap_analysis(current_skills, target_role):
 
-    system_prompt = "You are a hiring manager. Return JSON."
+    system_prompt = """You are a hiring manager and career coach.
+Return ONLY valid JSON. No markdown, no explanation, no extra text."""
 
-    user_prompt = f"""
-Current Skills: {current_skills}
+    user_prompt = f"""Current Skills: {current_skills}
 Target Role: {target_role}
 
-Return JSON:
-
+Return this exact JSON structure with real values filled in:
 {{
-"strengths":[],
-"missing_skills":[],
-"recommended_projects":[],
-"certifications":[],
-"interview_preparation":[],
-"job_readiness_score":0,
-"final_advice":""
+  "strengths": ["skill1", "skill2", "skill3"],
+  "missing_skills": ["skill1", "skill2", "skill3"],
+  "recommended_projects": ["project1", "project2", "project3"],
+  "certifications": ["cert1", "cert2"],
+  "interview_preparation": ["tip1", "tip2", "tip3"],
+  "job_readiness_score": 65,
+  "final_advice": "One paragraph of actionable advice."
 }}
-"""
 
-    response = ask_ai(system_prompt, user_prompt)
+job_readiness_score must be a number between 0 and 100.
+Return ONLY the JSON object."""
 
+    response = ask_ai(system_prompt, user_prompt, max_tokens=2000)
     return safe_json_parse(response) or {}
+
 
 
 # =====================================================
@@ -264,20 +266,79 @@ Return JSON:
 
 def generate_advanced_resume(details, target_role):
 
-    system_prompt = """
-You are a resume expert.
-Create ATS optimized resume.
-"""
+    system_prompt = """You are a professional resume writer.
+CRITICAL RULES:
+1. Use ONLY the exact information provided by the user. 
+2. Do NOT invent, hallucinate, or add any fake data.
+3. Do NOT add fake university names, fake percentages, fake companies, fake achievements.
+4. If a field is empty or missing, skip that section entirely.
+5. Use ONLY real skills, projects, and experience that the user has provided.
+6. Do NOT add placeholder text or example data."""
 
-    user_prompt = f"""
+    user_prompt = f"""Create a professional ATS-optimized resume using ONLY the details below.
+Do not add anything that is not in the details. Do not invent any data.
+
 Target Role: {target_role}
 
-User Details:
+=== CANDIDATE DETAILS (USE ONLY THIS DATA) ===
 {details}
-"""
+=== END OF CANDIDATE DETAILS ===
 
-    return ask_ai(system_prompt, user_prompt)
+Format the resume using this EXACT structure.
+Use only real data from above. Skip any section where data is missing or empty.
 
+[FULL NAME]
+[Email] | [Phone] | [LinkedIn] | [GitHub]
+========================================
+
+PROFESSIONAL SUMMARY
+--------------------
+Write 3-4 lines using ONLY their actual skills and target role: {target_role}
+Do not mention any university, company, or achievement not listed above.
+
+TECHNICAL SKILLS
+----------------
+Programming Languages : [from details only]
+Frameworks & Libraries: [from details only]
+Tools & Technologies  : [from details only]
+Soft Skills           : [from details only]
+
+EDUCATION
+---------
+[Degree] in [Branch]                                          [Year]
+[University] | CGPA: [cgpa]
+
+Intermediate (12th)                                           [Year]
+[College], [Board] | [Percentage]%
+
+Secondary (10th)                                              [Year]
+[School], [Board] | [Percentage]%
+
+PROJECTS
+--------
+[Project Title] | [Technologies from details]
+- [Action verb] + what they actually built (from description)
+- [Action verb] + key feature from their description
+- [Action verb] + outcome from their description
+
+EXPERIENCE / INTERNSHIP
+-----------------------
+[Role] | [Company]                                            [Duration]
+- [Action verb] + actual work they described
+- [Action verb] + actual contribution they mentioned
+
+CERTIFICATIONS
+--------------
+- [Only certifications they listed]
+
+IMPORTANT FINAL CHECK:
+- Every name, number, company, university must come from the candidate details above
+- If projects section is empty, write only the header and skip
+- If experience section is empty, write only the header and skip
+- Do NOT add achievements section unless user provided achievements
+- Do NOT add any data you made up"""
+
+    return ask_ai(system_prompt, user_prompt, temperature=0.1, max_tokens=4000)
 
 # =====================================================
 # MENTOR CHAT
@@ -299,22 +360,31 @@ Guide students with clarity.
 
 def career_predictor(skills, interests):
 
-    system_prompt = "You are an AI career strategist. Return JSON."
+    system_prompt = """You are an AI career strategist.
+Return ONLY valid JSON. No markdown, no explanation, no extra text.
+Start with { and end with }."""
 
-    user_prompt = f"""
-Skills: {skills}
+    user_prompt = f"""Skills: {skills}
 Interests: {interests}
 
-Return JSON:
-
+Return ONLY this exact JSON structure:
 {{
-"best_career_paths":[],
-"reasoning":"",
-"growth_potential":"",
-"salary_projection":""
+  "best_career_paths": [
+    {{
+      "title": "Career Title",
+      "description": "One sentence description.",
+      "required_skills": ["skill1", "skill2"],
+      "avg_salary": "$120,000/year",
+      "growth": "High"
+    }}
+  ],
+  "reasoning": "2-3 sentences explaining why these paths fit.",
+  "growth_potential": "High / Medium / Low",
+  "salary_projection": "$100,000 - $150,000/year",
+  "next_steps": ["Step 1", "Step 2", "Step 3"]
 }}
-"""
 
-    response = ask_ai(system_prompt, user_prompt)
+Generate 3 career paths. Return ONLY the JSON."""
 
+    response = ask_ai(system_prompt, user_prompt, max_tokens=2000)
     return safe_json_parse(response) or {}

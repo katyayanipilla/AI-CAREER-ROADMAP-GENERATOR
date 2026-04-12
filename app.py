@@ -196,17 +196,10 @@ unsafe_allow_html=True
 # =====================================================
 
 page = st.sidebar.radio("🚀Navigation", [
-    "🏠Dashboard",
-    "📚Roadmap",
-    "🧠Daily Quiz",
-    "📊Skill Gap",
-    "🎤Interview",
-    "👩‍🏫Mentor Chat",
-    "📄Resume Builder",
-    "🎓Career Predictor",
-    "👤Public Profile"
-])
-
+    "🏠Dashboard", "📚Roadmap", "🧠Daily Quiz",
+    "📊Skill Gap", "🎤Interview", "👩‍🏫Mentor Chat",
+    "📄Resume Builder", "🎓Career Predictor", "👤Public Profile"
+], key="nav_page")
 
 # =====================================================
 # DASHBOARD
@@ -260,12 +253,13 @@ if page == "🏠Dashboard":
     if last_active_date != today:
         st.warning("⚠️ You haven't completed today's quiz! Keep your streak alive 🔥")
         if st.button("👉 Go to Daily Quiz"):
-            st.session_state.page = "🧠Daily Quiz"
+            st.session_state["nav_page"] = "🧠Daily Quiz"   # ← NEW
+            st.rerun()                                        # ← NEW
     else:
         st.success("✅ Great! You've completed today's quiz")
-
+    
     quiz_scores = list(st.session_state.mastery.values())
-
+    
     avg_quiz = sum(quiz_scores)/len(quiz_scores) if quiz_scores else 0
     avg_interview = sum(st.session_state.interview_scores)/len(st.session_state.interview_scores) if st.session_state.interview_scores else 0
     job_ready = st.session_state.job_readiness_score
@@ -443,44 +437,37 @@ elif page == "🧠Daily Quiz":
     st.title("Adaptive Daily Quiz")
 
     topic = st.text_input("Topic")
-    difficulty = st.selectbox("Difficulty",["Beginner","Intermediate","Advanced"])
+    difficulty = st.selectbox("Difficulty", ["Beginner", "Intermediate", "Advanced"])
+    num_questions = st.selectbox("Number of Questions", [10, 20])  # ← ADD THIS
 
     if st.button("Generate Quiz"):
-
-        st.session_state.quiz_data = generate_daily_quiz(topic,difficulty)
+        with st.spinner("Generating quiz..."):
+            st.session_state.quiz_data = generate_daily_quiz(topic, difficulty, num_questions)  # ← pass it here
         st.session_state.quiz_submitted = False
 
     if st.session_state.quiz_data:
 
-        for i,q in enumerate(st.session_state.quiz_data):
-
+        for i, q in enumerate(st.session_state.quiz_data):
             st.write(f"Q{i+1}: {q['question']}")
-
-            st.radio("Answer",q["options"],key=f"quiz{i}")
+            st.radio("Answer", q["options"], key=f"quiz{i}")
 
         if st.button("Submit Quiz"):
-
             score = 0
-
-            for i,q in enumerate(st.session_state.quiz_data):
-
+            for i, q in enumerate(st.session_state.quiz_data):
                 if st.session_state[f"quiz{i}"] == q["correct_answer"]:
-                    score+=1
+                    score += 1
 
-            percentage = (score/len(st.session_state.quiz_data))*100
-
-            save_quiz_attempt(st.session_state.username,topic,percentage)
+            percentage = (score / len(st.session_state.quiz_data)) * 100
+            save_quiz_attempt(st.session_state.username, topic, percentage)
             update_streak(st.session_state.username)
-
-            st.success(f"Score: {percentage}%")
-
-
+            st.session_state.mastery[topic] = percentage
+            st.success(f"Score: {percentage:.1f}%")
 # =====================================================
 # INTERVIEW
 # =====================================================
 
 elif page == "🎤Interview":
-
+    st.title("🎤 Interview Practice")   # ADD THIS
     role = st.text_input("Target Role")
 
     if st.button("Generate Questions"):
@@ -553,15 +540,13 @@ elif page == "📄Resume Builder":
     st.header("Personal Information")
 
     col1, col2 = st.columns(2)
-
     with col1:
-        name = st.text_input("Full Name", key="name")
-        email = st.text_input("Email", key="email")
-        phone = st.text_input("Phone Number", key="phone")
-
+        name        = st.text_input("Full Name", key="name")
+        email       = st.text_input("Email", key="email")
+        phone       = st.text_input("Phone Number", key="phone")
     with col2:
-        linkedin = st.text_input("LinkedIn Profile", key="linkedin")
-        github = st.text_input("GitHub Profile", key="github")
+        linkedin    = st.text_input("LinkedIn Profile", key="linkedin")
+        github      = st.text_input("GitHub Profile", key="github")
         target_role = st.text_input("Target Role", key="target_role")
 
     # -------------------------
@@ -570,276 +555,411 @@ elif page == "📄Resume Builder":
     st.header("Educational Qualifications")
 
     st.subheader("10th / SSC")
-
     col1, col2 = st.columns(2)
-
     with col1:
-        tenth_school = st.text_input("School Name", key="tenth_school")
-        tenth_board = st.text_input("Board", key="tenth_board")
-
+        tenth_school     = st.text_input("School Name", key="tenth_school")
+        tenth_board      = st.text_input("Board", key="tenth_board")
     with col2:
         tenth_percentage = st.text_input("Percentage / CGPA", key="tenth_percentage")
-        tenth_year = st.text_input("Year of Completion", key="tenth_year")
+        tenth_year       = st.text_input("Year of Completion", key="tenth_year")
 
     st.subheader("Intermediate / 12th")
-
     col1, col2 = st.columns(2)
-
     with col1:
-        inter_college = st.text_input("College Name", key="inter_college")
-        inter_board = st.text_input("Board", key="inter_board")
-
+        inter_college    = st.text_input("College Name", key="inter_college")
+        inter_board      = st.text_input("Board", key="inter_board")
     with col2:
         inter_percentage = st.text_input("Percentage / CGPA", key="inter_percentage")
-        inter_year = st.text_input("Year of Completion", key="inter_year")
+        inter_year       = st.text_input("Year of Completion", key="inter_year")
 
     st.subheader("Graduation")
-
     col1, col2 = st.columns(2)
-
     with col1:
-        degree = st.text_input("Degree", key="degree")
-        branch = st.text_input("Branch", key="branch")
-
+        degree    = st.text_input("Degree", key="degree")
+        branch    = st.text_input("Branch", key="branch")
     with col2:
         university = st.text_input("University / College", key="university")
-        cgpa = st.text_input("CGPA", key="cgpa")
-        grad_year = st.text_input("Graduation Year", key="grad_year")
+        cgpa       = st.text_input("CGPA", key="cgpa")
+        grad_year  = st.text_input("Graduation Year", key="grad_year")
 
     # -------------------------
     # SKILLS
     # -------------------------
     st.header("Skills")
-
     programming = st.text_area("Programming Languages", key="programming")
-    frameworks = st.text_area("Frameworks / Libraries", key="frameworks")
-    tools = st.text_area("Tools & Technologies", key="tools")
+    frameworks  = st.text_area("Frameworks / Libraries", key="frameworks")
+    tools       = st.text_area("Tools & Technologies", key="tools")
     soft_skills = st.text_area("Soft Skills", key="soft_skills")
 
     # -------------------------
     # PROJECTS
     # -------------------------
     st.header("Projects")
-
     project_count = st.number_input("Number of Projects", 1, 5, 2, key="project_count")
-
     projects = []
-
-    for i in range(project_count):
-
+    for i in range(int(project_count)):
         st.subheader(f"Project {i+1}")
-
-        title = st.text_input(
-            f"Project Title {i+1}",
-            key=f"project_title_{i}"
-        )
-
-        description = st.text_area(
-            f"Project Description {i+1}",
-            key=f"project_desc_{i}"
-        )
-
-        tech = st.text_input(
-            f"Technologies Used {i+1}",
-            key=f"project_tech_{i}"
-        )
-
-        projects.append((title, description, tech))
+        p_title = st.text_input(f"Project Title {i+1}",       key=f"project_title_{i}")
+        p_desc  = st.text_area(f"Project Description {i+1}",  key=f"project_desc_{i}")
+        p_tech  = st.text_input(f"Technologies Used {i+1}",   key=f"project_tech_{i}")
+        projects.append((p_title, p_desc, p_tech))
 
     # -------------------------
     # EXPERIENCE
     # -------------------------
     st.header("Experience / Internship")
-
-    exp_count = st.number_input(
-        "Number of Experiences",
-        0,
-        3,
-        1,
-        key="exp_count"
-    )
-
+    exp_count = st.number_input("Number of Experiences", 0, 3, 1, key="exp_count")
     experiences = []
-
-    for i in range(exp_count):
-
+    for i in range(int(exp_count)):
         st.subheader(f"Experience {i+1}")
-
-        company = st.text_input(
-            f"Company Name {i+1}",
-            key=f"company_{i}"
-        )
-
-        role = st.text_input(
-            f"Role {i+1}",
-            key=f"role_{i}"
-        )
-
-        duration = st.text_input(
-            f"Duration {i+1}",
-            key=f"duration_{i}"
-        )
-
-        desc = st.text_area(
-            f"Work Description {i+1}",
-            key=f"desc_{i}"
-        )
-
-        experiences.append((company, role, duration, desc))
+        e_company  = st.text_input(f"Company Name {i+1}",      key=f"company_{i}")
+        e_role     = st.text_input(f"Role {i+1}",              key=f"role_{i}")
+        e_duration = st.text_input(f"Duration {i+1}",          key=f"duration_{i}")
+        e_desc     = st.text_area(f"Work Description {i+1}",   key=f"desc_{i}")
+        experiences.append((e_company, e_role, e_duration, e_desc))
 
     # -------------------------
     # CERTIFICATIONS
     # -------------------------
     st.header("Certifications")
-
     certifications = st.text_area(
-        "List Certifications",
-        key="certifications"
+        "List Certifications (one per line)", key="certifications"
     )
-
     certificate_files = st.file_uploader(
-        "Upload Certificates",
-        type=["pdf", "png", "jpg"],
-        accept_multiple_files=True,
-        key="cert_files"
+        "Upload Certificates", type=["pdf","png","jpg"],
+        accept_multiple_files=True, key="cert_files"
     )
 
     # -------------------------
-    # GENERATE RESUME
+    # GENERATE BUTTON
     # -------------------------
     if st.button("🚀 Generate Professional Resume", key="generate_resume"):
 
+        if not name.strip() or not target_role.strip():
+            st.warning("⚠️ Please fill in at least your Full Name and Target Role.")
+            st.stop()
+
+        # ── Helper: return value or "Not provided" ─────────────
+        def val(v, fallback="Not provided"):
+            return v.strip() if v and v.strip() else fallback
+
+        # ── Build project text ─────────────────────────────────
         project_text = ""
-
         for p in projects:
+            if p[0].strip():
+                project_text += f"\nTitle      : {p[0]}\nDescription: {p[1]}\nTechnologies: {p[2]}\n"
+        if not project_text:
+            project_text = "No projects provided."
 
-            project_text += f"""
-{p[0]}
-{p[1]}
-Technologies: {p[2]}
-"""
-
+        # ── Build experience text ──────────────────────────────
         exp_text = ""
-
         for e in experiences:
+            if e[0].strip():
+                exp_text += f"\nCompany    : {e[0]}\nRole       : {e[1]}\nDuration   : {e[2]}\nDescription: {e[3]}\n"
+        if not exp_text:
+            exp_text = "No experience provided."
 
-            exp_text += f"""
-Company: {e[0]}
-Role: {e[1]}
-Duration: {e[2]}
-{e[3]}
-"""
-
+        # ── Build full details string ──────────────────────────
         details = f"""
 PERSONAL INFORMATION
-Name: {name}
-Email: {email}
-Phone: {phone}
-LinkedIn: {linkedin}
-GitHub: {github}
+Name     : {val(name)}
+Email    : {val(email)}
+Phone    : {val(phone)}
+LinkedIn : {val(linkedin)}
+GitHub   : {val(github)}
 
-TARGET ROLE
-{target_role}
+TARGET ROLE: {val(target_role)}
 
 EDUCATION
-10th: {tenth_school}, {tenth_board}, {tenth_percentage}, {tenth_year}
-Intermediate: {inter_college}, {inter_board}, {inter_percentage}, {inter_year}
-Graduation: {degree} {branch}, {university}, CGPA {cgpa}, {grad_year}
+10th Grade  : School={val(tenth_school)}, Board={val(tenth_board)}, Marks={val(tenth_percentage)}%, Year={val(tenth_year)}
+Intermediate: College={val(inter_college)}, Board={val(inter_board)}, Marks={val(inter_percentage)}%, Year={val(inter_year)}
+Graduation  : Degree={val(degree)}, Branch={val(branch)}, University={val(university)}, CGPA={val(cgpa)}, Year={val(grad_year)}
 
 SKILLS
-Programming: {programming}
-Frameworks: {frameworks}
-Tools: {tools}
-Soft Skills: {soft_skills}
+Programming Languages : {val(programming)}
+Frameworks/Libraries  : {val(frameworks)}
+Tools & Technologies  : {val(tools)}
+Soft Skills           : {val(soft_skills)}
 
 PROJECTS
 {project_text}
 
-EXPERIENCE
+EXPERIENCE / INTERNSHIP
 {exp_text}
 
 CERTIFICATIONS
-{certifications}
+{val(certifications)}
 """
 
-        with st.spinner("Generating ATS Optimized Resume..."):
-
+        # ── Generate resume via AI ─────────────────────────────
+        with st.spinner("✍️ Generating your professional resume..."):
             resume = generate_advanced_resume(details, target_role)
 
-        st.subheader("Generated Resume")
+        if not resume:
+            st.error("❌ Resume generation failed. Please try again.")
+            st.stop()
 
-        st.text_area("Resume Output", resume, height=400)
+        # ── Preview ────────────────────────────────────────────
+        st.markdown("---")
+        st.subheader("📄 Resume Preview")
+        st.text_area("", resume, height=500)
 
-        # -------------------------
-        # ATS SCORE
-        # -------------------------
-        ats_score = min(95, 60 + len(programming.split(",")) * 3)
+        # ── ATS Score ──────────────────────────────────────────
+        skill_count = len([s for s in programming.split(",") if s.strip()])
+        ats_score   = min(95, 60 + skill_count * 3)
 
-        st.metric("ATS Score", f"{ats_score}/100")
+        st.markdown("### 📊 ATS Score")
+        col1, col2 = st.columns([1, 3])
+        with col1:
+            st.metric("Score", f"{ats_score}/100")
+        with col2:
+            st.progress(ats_score / 100)
 
         if ats_score < 80:
-
-            st.warning("Suggestions to improve your resume")
-
-            st.write("• Add measurable achievements")
-            st.write("• Add GitHub project links")
-            st.write("• Include more technical keywords")
-            st.write("• Add internship experience")
-
+            st.warning("💡 Tips to improve your ATS score:")
+            st.write("• Add measurable achievements (e.g. 'Reduced load time by 40%')")
+            st.write("• Include more technical keywords for your target role")
+            st.write("• Add GitHub project links inside project descriptions")
+            st.write("• Include internship or freelance experience")
         else:
+            st.success("✅ Your resume is well-optimized for ATS systems.")
 
-            st.success("Great! Your resume is ATS optimized.")
+        # ── Save to DB ─────────────────────────────────────────
+        save_resume(st.session_state.username, target_role, resume)
 
-        # -------------------------
-        # SAVE RESUME
-        # -------------------------
-        save_resume(
-            st.session_state.username,
-            target_role,
-            resume
-        )
+        # ── Generate Professional PDF ──────────────────────────
+        try:
+            from fpdf import FPDF
 
-        # -------------------------
-        # CREATE PDF
-        # -------------------------
-        pdf = FPDF()
+            BLUE       = (31,  73, 125)
+            DARK       = (30,  30,  30)
+            GRAY       = (80,  80,  80)
+            LIGHT_BLUE = (235, 242, 250)
+            WHITE      = (255, 255, 255)
 
-        pdf.add_page()
+            class ResumePDF(FPDF):
+                def header(self):
+                    pass
+                def footer(self):
+                    self.set_y(-12)
+                    self.set_font("Arial", "I", 7)
+                    self.set_text_color(*GRAY)
+                    self.cell(
+                        0, 8,
+                        f"{name}  |  {target_role}  |  Page {self.page_no()}",
+                        align="C"
+                    )
 
-        pdf.set_font("Arial", "B", 16)
-        pdf.cell(0, 10, name, ln=True)
+            pdf = ResumePDF()
+            pdf.set_margins(15, 15, 15)
+            pdf.set_auto_page_break(auto=True, margin=15)
+            pdf.add_page()
 
-        pdf.set_font("Arial", size=12)
+            # ── Name ───────────────────────────────────────────
+            pdf.set_font("Arial", "B", 20)
+            pdf.set_text_color(*DARK)
+            pdf.cell(0, 10, name.upper(), ln=True, align="C")
 
-        for line in resume.split("\n"):
+            # ── Contact line ───────────────────────────────────
+            contact_parts = [
+                x for x in [email, phone, linkedin, github] if x and x.strip()
+            ]
+            contact_line = "  |  ".join(contact_parts)
+            pdf.set_font("Arial", "", 8)
+            pdf.set_text_color(*GRAY)
+            pdf.cell(0, 5, contact_line, ln=True, align="C")
+            pdf.ln(2)
 
-            pdf.cell(0, 8, line, ln=True)
+            # ── Top rule ───────────────────────────────────────
+            pdf.set_draw_color(*BLUE)
+            pdf.set_line_width(0.8)
+            pdf.line(15, pdf.get_y(), 195, pdf.get_y())
+            pdf.ln(4)
 
-        pdf_file = "resume.pdf"
+            # ── Helpers ────────────────────────────────────────
+            def section_heading(title):
+                pdf.ln(3)
+                pdf.set_font("Arial", "B", 10)
+                pdf.set_text_color(*WHITE)
+                pdf.set_fill_color(*BLUE)
+                pdf.cell(0, 6, f"  {title}", ln=True, fill=True)
+                pdf.ln(2)
 
-        pdf.output(pdf_file)
+            def bullet_line(text):
+                pdf.set_font("Arial", "", 9)
+                pdf.set_text_color(*DARK)
+                pdf.cell(5, 5, chr(149), ln=False)
+                pdf.multi_cell(0, 5, text.strip())
 
-        with open(pdf_file, "rb") as f:
+            def key_value(label, value):
+                pdf.set_font("Arial", "B", 9)
+                pdf.set_text_color(*DARK)
+                pdf.cell(52, 5, label + ":", ln=False)
+                pdf.set_font("Arial", "", 9)
+                pdf.set_text_color(50, 50, 50)
+                pdf.multi_cell(0, 5, value)
 
-            st.download_button(
-                "📥 Download Resume PDF",
-                data=f,
-                file_name="Professional_Resume.pdf",
-                mime="application/pdf"
-            )
+            def pipe_row(left, right):
+                pdf.set_font("Arial", "B", 9)
+                pdf.set_text_color(*DARK)
+                pdf.cell(110, 6, left.strip(), ln=False)
+                pdf.set_font("Arial", "I", 9)
+                pdf.set_text_color(*GRAY)
+                pdf.cell(0, 6, right.strip(), ln=True, align="R")
+
+            def plain(text):
+                pdf.set_font("Arial", "", 9)
+                pdf.set_text_color(50, 50, 50)
+                pdf.multi_cell(0, 5, text.strip())
+                pdf.ln(1)
+
+            # ── Parse resume lines ─────────────────────────────
+            lines     = resume.split("\n")
+            name_done = False
+            idx       = 0
+
+            while idx < len(lines):
+                raw  = lines[idx]
+                line = raw.strip()
+
+                # Skip name line (already drawn)
+                if not name_done and name.lower() in line.lower() and len(line) < 60:
+                    name_done = True
+                    idx += 1
+                    continue
+
+                # Skip contact line (already drawn)
+                if "|" in line and (
+                    "@" in line
+                    or "linkedin" in line.lower()
+                    or "github" in line.lower()
+                    or (phone and phone in line)
+                ):
+                    idx += 1
+                    continue
+
+                # Skip separator lines  === --- ___
+                if line and set(line).issubset(set("=-_ \t")) and len(line) > 3:
+                    idx += 1
+                    continue
+
+                # Skip lines with markdown bold ** **
+                line = line.replace("**", "")
+
+                # Section heading — ALL CAPS, short, no bullets
+                if (
+                    line.isupper()
+                    and 3 < len(line) < 50
+                    and not line.startswith("-")
+                    and not line.startswith("•")
+                ):
+                    section_heading(line)
+                    idx += 1
+                    continue
+
+                # Bullet point
+                if line.startswith(("-", "•", "*")):
+                    content = line.lstrip("-•* ").strip()
+                    if content:
+                        bullet_line(content)
+                    idx += 1
+                    continue
+
+                # Pipe row — "Project Title | Tech"  (no @ sign)
+                if "|" in line and "@" not in line and len(line) < 120:
+                    parts = line.split("|", 1)
+                    pipe_row(parts[0], parts[1] if len(parts) > 1 else "")
+                    idx += 1
+                    continue
+
+                # Key : Value  (Skills, Education labels)
+                if ":" in line and not line.startswith("http") and len(line) < 150:
+                    colon = line.index(":")
+                    label = line[:colon].strip()
+                    value = line[colon+1:].strip()
+                    if label and value and len(label) < 35:
+                        key_value(label, value)
+                        idx += 1
+                        continue
+
+                # Non-empty plain line
+                if line:
+                    plain(line)
+
+                idx += 1
+
+            # ── Save & offer download ──────────────────────────
+            safe_name = name.strip().replace(" ", "_")
+            safe_role = target_role.strip().replace(" ", "_")
+            pdf_path  = f"resume_{safe_name}_{safe_role}.pdf"
+            pdf.output(pdf_path)
+
+            with open(pdf_path, "rb") as f:
+                st.download_button(
+                    label="📥 Download Professional Resume PDF",
+                    data=f,
+                    file_name=f"Resume_{safe_name}_{safe_role}.pdf",
+                    mime="application/pdf"
+                )
+
+            st.success("✅ PDF ready! Click the button above to download.")
+
+        except Exception as e:
+            st.error(f"PDF generation error: {e}")
+            st.write("You can still copy the resume text from the preview above.")
 # =====================================================
 # CAREER PREDICTOR
 # =====================================================
 
 elif page == "🎓Career Predictor":
 
-    skills = st.text_input("Skills")
-    interests = st.text_input("Interests")
+    st.title("🎓 AI Career Predictor")
+
+    skills = st.text_input("Your Skills (e.g. Python, SQL, Machine Learning)")
+    interests = st.text_input("Your Interests (e.g. Data, AI, Web Development)")
 
     if st.button("Predict Career"):
-        st.write(career_predictor(skills,interests))
 
+        if not skills or not interests:
+            st.warning("Please enter both skills and interests.")
+        else:
+            with st.spinner("Analyzing your profile..."):
+                result = career_predictor(skills, interests)
 
+            if not result:
+                st.error("Could not generate prediction. Please try again.")
+            else:
+                # ── Reasoning ──────────────────────────────────────
+                st.markdown("### 🧠 Why These Careers Fit You")
+                st.info(result.get("reasoning", "N/A"))
+
+                # ── Summary metrics ────────────────────────────────
+                col1, col2 = st.columns(2)
+                with col1:
+                    st.metric("📈 Growth Potential", result.get("growth_potential", "N/A"))
+                with col2:
+                    st.metric("💰 Salary Projection", result.get("salary_projection", "N/A"))
+
+                # ── Career Cards ───────────────────────────────────
+                st.markdown("### 🚀 Best Career Paths")
+
+                for i, career in enumerate(result.get("best_career_paths", [])):
+                    with st.expander(f"#{i+1}  {career.get('title', 'Career')}"):
+                        st.write("📋 **Description:**", career.get("description", ""))
+                        st.write("💰 **Avg Salary:**", career.get("avg_salary", "N/A"))
+                        st.write("📈 **Growth:**", career.get("growth", "N/A"))
+
+                        skills_needed = career.get("required_skills", [])
+                        if skills_needed:
+                            st.write("🛠️ **Required Skills:**")
+                            st.write("  " + "  |  ".join(skills_needed))
+
+                # ── Next Steps ─────────────────────────────────────
+                next_steps = result.get("next_steps", [])
+                if next_steps:
+                    st.markdown("### 👣 Recommended Next Steps")
+                    for i, step in enumerate(next_steps, 1):
+                        st.write(f"{i}. {step}")
 # =====================================================
 # PUBLIC PROFILE
 # =====================================================
