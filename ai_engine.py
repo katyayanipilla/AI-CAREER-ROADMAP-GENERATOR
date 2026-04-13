@@ -82,48 +82,68 @@ def ask_ai(system_prompt, user_prompt, temperature=0.3, max_tokens=4000):
 # =====================================================
 
 def generate_roadmap(role, duration_months, level):
+    import time
+    from concurrent.futures import ThreadPoolExecutor, as_completed
 
     weeks = duration_months * 4
+    chunk_size = 4  # ← bigger chunks = fewer API calls
 
-    system_prompt = """
-You are a professional AI curriculum designer.
-Return ONLY valid JSON array. No explanation, no markdown, no extra text.
-The response must be a complete, valid JSON array from [ to ].
-"""
+    system_prompt = """You are a curriculum designer.
+Return ONLY valid JSON array. No markdown, no extra text.
+Start with [ and end with ]."""
 
-    user_prompt = f"""
-Role: {role}
-Level: {level}
-Duration: {weeks} weeks
-
-Generate a {weeks}-week learning roadmap.
-
-Return a JSON array with exactly {weeks} objects.
-
-Format:
+    def generate_chunk(start, end):
+        count = end - start + 1
+        user_prompt = f"""Role: {role}, Level: {level}
+Generate exactly {count} weeks (week {start} to week {end}).
 [
   {{
-    "week_number": 1,
-    "title": "Week title",
-    "concepts": ["concept1", "concept2"],
-    "learning_resources": [{{"title": "Resource name", "url": "https://..."}}],
-    "project": "Hands-on project description",
-    "outcome": "What the learner will achieve"
+    "week_number": {start},
+    "title": "Short title",
+    "concepts": ["c1", "c2", "c3"],
+    "learning_resources": [{{"title": "Resource", "url": "https://..."}}],
+    "project": "Project",
+    "outcome": "Outcome"
   }}
 ]
+Return ONLY JSON array. week_number from {start} to {end}."""
 
-Return ONLY the JSON array. No extra text.
-"""
+        for attempt in range(3):
+            try:
+                response = ask_ai(
+                    system_prompt, user_prompt,
+                    temperature=0.1,
+                    max_tokens=count * 350 + 400
+                )
+                result = safe_json_parse(response)
+                if result:
+                    return result
+            except Exception as e:
+                print(f"Chunk {start}-{end} failed attempt {attempt+1}: {e}")
+                time.sleep(2 ** attempt)  # 1s, 2s, 4s
+        return []
 
-    # ~300 tokens per week keeps the response complete
-    max_tokens = min(weeks * 300, 8000)
+    # Build chunks
+    chunks = [(start, min(start + chunk_size - 1, weeks))
+              for start in range(1, weeks + 1, chunk_size)]
 
-    response = ask_ai(system_prompt, user_prompt, max_tokens=max_tokens)
+    all_weeks = [None] * len(chunks)
 
-    parsed = safe_json_parse(response)
+    # Parallel with staggered start to avoid rate limit spikes
+    with ThreadPoolExecutor(max_workers=4) as executor:
+        future_to_idx = {}
+        for i, (s, e) in enumerate(chunks):
+            time.sleep(i * 0.3)  # ← stagger launches by 300ms
+            future_to_idx[executor.submit(generate_chunk, s, e)] = i
 
-    return parsed or []
+        for future in as_completed(future_to_idx):
+            idx = future_to_idx[future]
+            try:
+                all_weeks[idx] = future.result()
+            except Exception:
+                all_weeks[idx] = []
 
+    return [week for chunk in all_weeks if chunk for week in chunk]
 # =====================================================
 # DAILY QUIZ
 # =====================================================

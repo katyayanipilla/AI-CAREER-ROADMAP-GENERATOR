@@ -346,7 +346,8 @@ elif page == "📚Roadmap":
     roadmap_text = ""
 
     if st.button("Generate Roadmap"):
-
+        total_weeks = duration * 4
+        st.info(f"⏳ Generating {total_weeks}-week roadmap... This may take {total_weeks * 2}–{total_weeks * 3} seconds.")
         with st.spinner("Generating roadmap..."):
             roadmap = generate_roadmap(role, duration, level)
 
